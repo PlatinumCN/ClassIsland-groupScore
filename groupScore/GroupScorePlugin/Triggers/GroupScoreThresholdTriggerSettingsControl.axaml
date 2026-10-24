@@ -1,0 +1,65 @@
+<ci:TriggerSettingsControlBase
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ci="http://classisland.tech/schemas/xaml/core"
+    xmlns:local="clr-namespace:GroupScorePlugin.Triggers"
+    x:Class="GroupScorePlugin.Triggers.GroupScoreThresholdTriggerSettingsControl"
+    x:TypeArguments="local:GroupScoreThresholdTriggerSettings">
+
+    <!--
+        根元素写成 ClassIsland 的 TriggerSettingsControlBase，用 x:TypeArguments 指明设置类型。
+        代码后置类必须**直接**继承 TriggerSettingsControlBase<GroupScoreThresholdTriggerSettings>，
+        因为框架是从 BaseType 的泛型参数里反推设置类型的（取不到就等于没有设置）。
+
+        刻意不给文字硬写 Foreground：设置界面要跟着 ClassIsland 的主题走。
+    -->
+    <StackPanel Spacing="6" MinWidth="320" Margin="0,4">
+
+        <TextBlock Text="小组积分达到阈值时触发"
+                   FontWeight="SemiBold" />
+
+        <TextBlock Text="盯着哪个小组"
+                   FontSize="12"
+                   Opacity="0.7" />
+        <ComboBox x:Name="TargetCombo" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <Grid ColumnDefinitions="*,12,*" Margin="0,4,0,0">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="条件"
+                           FontSize="12"
+                           Opacity="0.7" />
+                <ComboBox x:Name="ComparisonCombo" HorizontalAlignment="Stretch">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <TextBlock Text="{Binding Label}" />
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Spacing="4">
+                <TextBlock Text="阈值分数线"
+                           FontSize="12"
+                           Opacity="0.7" />
+                <NumericUpDown x:Name="ThresholdBox"
+                               Minimum="-999"
+                               Maximum="999"
+                               Increment="1"
+                               FormatString="0" />
+            </StackPanel>
+        </Grid>
+
+        <TextBlock x:Name="HintText"
+                   Margin="0,6,0,0"
+                   FontSize="12"
+                   Opacity="0.7"
+                   TextWrapping="Wrap" />
+
+    </StackPanel>
+</ci:TriggerSettingsControlBase>

@@ -1,0 +1,66 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GroupScorePlugin.Components.ScoreBoardComponent">
+
+    <!-- 深色底 + 圆角，是为了在教室大屏上隔着几排也看得清 -->
+    <Border Background="#1E222B"
+            BorderBrush="#39404E"
+            BorderThickness="1"
+            CornerRadius="12"
+            Padding="14,10">
+        <StackPanel Spacing="4">
+
+            <TextBlock Text="小组积分榜"
+                       FontSize="15"
+                       FontWeight="SemiBold"
+                       Foreground="#EDEDED"
+                       Margin="0,0,0,2" />
+
+            <ItemsControl x:Name="RankList">
+                <ItemsControl.ItemTemplate>
+                    <DataTemplate>
+                        <!-- 名次 | 色块 | 组名 | 今日变化 | 总分 -->
+                        <Grid ColumnDefinitions="24,8,*,Auto,Auto" Margin="0,3">
+                            <TextBlock Grid.Column="0"
+                                       Text="{Binding Rank}"
+                                       FontSize="13"
+                                       Foreground="#9AA3B2"
+                                       VerticalAlignment="Center" />
+                            <Border Grid.Column="1"
+                                    Width="6" Height="18"
+                                    CornerRadius="3"
+                                    VerticalAlignment="Center"
+                                    Background="{Binding Brush}" />
+                            <TextBlock Grid.Column="2"
+                                       Text="{Binding Name}"
+                                       Margin="8,0,8,0"
+                                       FontSize="14"
+                                       Foreground="#D6DAE2"
+                                       VerticalAlignment="Center"
+                                       TextTrimming="CharacterEllipsis" />
+                            <TextBlock Grid.Column="3"
+                                       Text="{Binding TodayText}"
+                                       Margin="0,0,10,0"
+                                       FontSize="12"
+                                       Foreground="{Binding TodayBrush}"
+                                       VerticalAlignment="Center" />
+                            <TextBlock Grid.Column="4"
+                                       Text="{Binding Total}"
+                                       FontSize="14"
+                                       FontWeight="SemiBold"
+                                       Foreground="#EDEDED"
+                                       VerticalAlignment="Center" />
+                        </Grid>
+                    </DataTemplate>
+                </ItemsControl.ItemTemplate>
+            </ItemsControl>
+
+            <TextBlock x:Name="EmptyHint"
+                       Text="还没有小组。请到「应用设置 → 插件 → 小组积分」里添加。"
+                       FontSize="12"
+                       Foreground="#6E7686"
+                       TextWrapping="Wrap"
+                       IsVisible="False" />
+        </StackPanel>
+    </Border>
+</UserControl>

@@ -1,0 +1,43 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0-windows</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <AssemblyName>gs-test</AssemblyName>
+    <RootNamespace>GsTest</RootNamespace>
+    <EnableDefaultCompileItems>true</EnableDefaultCompileItems>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Avalonia" Version="11.3.17" />
+    <!-- 持久化那几层要在自检台里真跑，所以这里也得有 SQLite -->
+    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Models/*.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/JsonStore.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/ScoreStore.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/ScoreService.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/SettingsService.cs" />
+    <!-- 存储层：接口 / 两个后端 / 后端选择与迁移 / 增量判定 / 原生库加载器。
+         它们都不依赖 ClassIsland，所以整条落盘链路能在自检台里真跑一遍 ——
+         包括「迁移完之后数据一不一样」「增量写有没有漏记录」这些最要命的点。 -->
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/IScorePersistence.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/JsonScorePersistence.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/SqliteScorePersistence.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/SqliteNativeLoader.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/RecordWriteDecision.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Services/ScorePersistenceSelector.cs" />
+    <!-- 行动设置模型刻意不依赖 ClassIsland，所以能编进来直接测序列化往返 -->
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Actions/AddScoreActionSettings.cs" />
+    <!-- 触发器这边同理：设置模型 + 条件判定 + 边沿检测都不依赖 ClassIsland，
+         所以「触发器到底什么时候会触发」这件事可以在自检台里真跑一遍，
+         而不是把同样的 if 在测试里再抄一遍。 -->
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Triggers/GroupScoreThresholdTriggerSettings.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Triggers/GroupScoreThresholdRule.cs" />
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Triggers/ThresholdEdgeDetector.cs" />
+    <!-- 悬浮球的位置算术同样一个 Avalonia 类型都不用引，
+         所以「球会不会跑到屏幕外」「换个屏幕还找不找得回来」都能在这里真跑一遍 -->
+    <Compile Include="C:/Users/38545/WorkBuddy/2026-10-16-20-05-49/GroupScorePlugin/Views/BallPlacement.cs" />
+  </ItemGroup>
+</Project>

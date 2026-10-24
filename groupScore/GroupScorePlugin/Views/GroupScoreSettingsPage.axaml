@@ -1,0 +1,420 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="GroupScorePlugin.Views.GroupScoreSettingsPage">
+
+    <TabControl Margin="8">
+
+        <!-- ==================== Tab 1：小组管理 ==================== -->
+        <TabItem Header="小组管理">
+            <Grid RowDefinitions="Auto,Auto,*,Auto,Auto" Margin="12">
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                    <TextBox x:Name="NewGroupName"
+                             Width="220"
+                             Watermark="输入新小组名称，如 第五小组" />
+                    <Button Content="添加小组" Click="OnAddGroupClick" />
+                    <Button Content="重命名选中" Click="OnRenameGroupClick" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="1"
+                           Margin="0,10,0,6"
+                           FontSize="12"
+                           Foreground="#9AA3B2"
+                           Text="在列表中选中一行即可调整顺序或删除；重命名请把新名字写在上方输入框里再点「重命名选中」。删除小组会连带清除它的全部积分记录，且无法撤销。" />
+
+                <ListBox Grid.Row="2" x:Name="GroupListBox">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="12,*,Auto">
+                                <Border Grid.Column="0"
+                                        Width="10" Height="10"
+                                        CornerRadius="5"
+                                        VerticalAlignment="Center"
+                                        Background="{Binding Brush}" />
+                                <TextBlock Grid.Column="1"
+                                           Text="{Binding Name}"
+                                           Margin="10,0,0,0"
+                                           FontSize="14"
+                                           VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="2"
+                                           Text="{Binding CachedTotal}"
+                                           FontSize="14"
+                                           FontWeight="SemiBold"
+                                           VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <StackPanel Grid.Row="3" Orientation="Horizontal" Spacing="8" Margin="0,8,0,0">
+                    <Button Content="上移" Click="OnMoveUpClick" />
+                    <Button Content="下移" Click="OnMoveDownClick" />
+                    <Button x:Name="DeleteGroupButton" Content="删除选中" Click="OnDeleteGroupClick" />
+                    <TextBlock x:Name="GroupStatusText"
+                               FontSize="12"
+                               Foreground="#1D9E75"
+                               VerticalAlignment="Center"
+                               TextWrapping="Wrap" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="4" Spacing="6" Margin="0,12,0,0">
+                    <TextBlock FontSize="12" Foreground="#9AA3B2"
+                               Text="批量导入：一行一个组名，粘贴后批量建组（适合开学一次性建好所有小组）" />
+                    <Grid ColumnDefinitions="*,Auto">
+                        <TextBox Grid.Column="0"
+                                 x:Name="BulkImportBox"
+                                 AcceptsReturn="True"
+                                 Height="80"
+                                 TextWrapping="Wrap"
+                                 Watermark="第一小组&#x0a;第二小组&#x0a;第三小组" />
+                        <Button Grid.Column="1"
+                                Content="批量导入"
+                                Margin="8,0,0,0"
+                                VerticalAlignment="Bottom"
+                                Click="OnBulkImportClick" />
+                    </Grid>
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- ==================== Tab 2：小组成员（可选） ==================== -->
+        <!-- 成员维度整条链路都是可选的：不建成员时积分全记在小组一级，
+             这个页面显示「还没有成员」，其余功能一概不受影响。 -->
+        <TabItem Header="小组成员">
+            <ScrollViewer>
+                <StackPanel Margin="12" Spacing="8">
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="小组" VerticalAlignment="Center" />
+                        <ComboBox x:Name="MemberGroupCombo" Width="200" />
+                    </StackPanel>
+
+                    <TextBlock FontSize="12" Foreground="#9AA3B2" TextWrapping="Wrap"
+                               Text="成员维度是可选的：只有需要把分算到具体学生头上时才要建成员。不建成员时，所有积分都记在小组一级，其余功能完全不受影响。" />
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox x:Name="NewMemberName" Width="140" Watermark="成员姓名" />
+                        <Button Content="添加成员" Click="OnAddMemberClick" />
+                        <Button Content="重命名选中" Click="OnRenameMemberClick" />
+                        <Button x:Name="DeleteMemberButton" Content="删除选中" Click="OnDeleteMemberClick" />
+                    </StackPanel>
+
+                    <ListBox x:Name="MemberListBox" MaxHeight="220">
+                        <ListBox.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="30,*,Auto">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Rank}"
+                                               FontSize="13"
+                                               Foreground="#9AA3B2"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Name}"
+                                               Margin="4,0,0,0"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Total}"
+                                               FontSize="14"
+                                               FontWeight="SemiBold"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                            </DataTemplate>
+                        </ListBox.ItemTemplate>
+                    </ListBox>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="上移" Click="OnMemberUpClick" />
+                        <Button Content="下移" Click="OnMemberDownClick" />
+                        <TextBlock Text="转到其他组" VerticalAlignment="Center" Margin="8,0,0,0" />
+                        <ComboBox x:Name="MemberMoveTargetCombo" Width="150" />
+                        <Button Content="执行转组" Click="OnMoveMemberClick" />
+                    </StackPanel>
+
+                    <TextBlock x:Name="MemberBalanceText"
+                               FontSize="12"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap" />
+
+                    <Separator Margin="0,4" />
+
+                    <TextBlock FontSize="12" Foreground="#9AA3B2"
+                               Text="给选中成员加减分（这笔分同时计入他所在小组的总分）" />
+                    <WrapPanel x:Name="MemberPresetPanel" />
+                    <Grid ColumnDefinitions="110,*">
+                        <NumericUpDown Grid.Column="0"
+                                       x:Name="MemberDeltaBox"
+                                       Minimum="-999" Maximum="999"
+                                       Increment="1" Value="1"
+                                       FormatString="0" />
+                        <TextBox Grid.Column="1"
+                                 x:Name="MemberReasonBox"
+                                 Margin="8,0,0,0"
+                                 Watermark="原因（可留空）" />
+                    </Grid>
+                    <Button Content="应用到选中成员"
+                            HorizontalAlignment="Left"
+                            Click="OnApplyMemberCustomClick" />
+
+                    <TextBlock x:Name="MemberStatusText"
+                               FontSize="12"
+                               Foreground="#1D9E75"
+                               TextWrapping="Wrap" />
+
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+
+        <!-- ==================== Tab 3：积分操作 ==================== -->
+        <TabItem Header="积分操作">
+            <Grid RowDefinitions="Auto,Auto,Auto,Auto,Auto,*" Margin="12">
+
+                <TextBlock Grid.Row="0" FontSize="12" Foreground="#9AA3B2" Text="选择小组" />
+                <ComboBox Grid.Row="1" x:Name="ScoreGroupCombo" HorizontalAlignment="Stretch" />
+
+                <StackPanel Grid.Row="2" Spacing="6" Margin="0,12,0,0">
+                    <TextBlock FontSize="12" Foreground="#9AA3B2" Text="快捷加减分（点击立即生效）" />
+                    <WrapPanel x:Name="ScorePresetPanel" />
+                </StackPanel>
+
+                <StackPanel Grid.Row="3" Spacing="6" Margin="0,12,0,0">
+                    <TextBlock FontSize="12" Foreground="#9AA3B2" Text="自定义分值" />
+                    <Grid ColumnDefinitions="110,*">
+                        <NumericUpDown Grid.Column="0"
+                                       x:Name="CustomDeltaBox"
+                                       Minimum="-999" Maximum="999"
+                                       Increment="1" Value="1"
+                                       FormatString="0" />
+                        <TextBox Grid.Column="1"
+                                 x:Name="CustomReasonBox"
+                                 Margin="8,0,0,0"
+                                 Watermark="原因（可留空）" />
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="应用" Click="OnApplyCustomClick" />
+                        <Button Content="撤销上一步" Click="OnUndoClick" />
+                    </StackPanel>
+                </StackPanel>
+
+                <TextBlock Grid.Row="4"
+                           x:Name="OperateStatusText"
+                           Margin="0,10,0,6"
+                           FontSize="12"
+                           Foreground="#1D9E75"
+                           TextWrapping="Wrap" />
+
+                <StackPanel Grid.Row="5" Spacing="6">
+                    <TextBlock FontSize="12" Foreground="#9AA3B2" Text="最近 20 条记录" />
+                    <ListBox x:Name="RecordListBox" />
+                </StackPanel>
+            </Grid>
+        </TabItem>
+
+        <!-- ==================== Tab 4：历史对比 ==================== -->
+        <!-- 这一页回答两个问题：「这一周谁最活跃」和「格局有没有变」。
+             时间切分与聚合全在 Models/PeriodStats.cs 里（纯函数，自检台真跑），
+             这里只负责把结果画成表，一行日期算术都不写。 -->
+        <TabItem Header="历史对比">
+            <Grid RowDefinitions="Auto,Auto,Auto,*,Auto" Margin="12">
+
+                <StackPanel Grid.Row="0" Orientation="Horizontal" Spacing="8">
+                    <TextBlock Text="统计周期" VerticalAlignment="Center" />
+                    <ComboBox x:Name="HistoryKindCombo" Width="170" />
+                    <Button Content="刷新" Click="OnRefreshHistoryClick" />
+                </StackPanel>
+
+                <TextBlock Grid.Row="1"
+                           x:Name="HistorySummaryText"
+                           Margin="0,10,0,6"
+                           FontSize="13"
+                           TextWrapping="Wrap" />
+
+                <!-- 表头：列宽必须和下面每一行的 ColumnDefinitions 完全一致 -->
+                <Grid Grid.Row="2" ColumnDefinitions="34,*,66,66,66,74,66" Margin="0,0,0,4">
+                    <TextBlock Grid.Column="0" Text="名次" FontSize="12" Foreground="#9AA3B2" />
+                    <TextBlock Grid.Column="1" Text="小组" FontSize="12" Foreground="#9AA3B2" />
+                    <TextBlock Grid.Column="2" Text="本期" FontSize="12" Foreground="#9AA3B2"
+                               HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="3" Text="上期" FontSize="12" Foreground="#9AA3B2"
+                               HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="4" Text="相比" FontSize="12" Foreground="#9AA3B2"
+                               HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="5" Text="累计" FontSize="12" Foreground="#9AA3B2"
+                               HorizontalAlignment="Right" />
+                    <TextBlock Grid.Column="6" Text="名次变化" FontSize="12" Foreground="#9AA3B2"
+                               HorizontalAlignment="Right" />
+                </Grid>
+
+                <ListBox Grid.Row="3" x:Name="HistoryListBox">
+                    <ListBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid ColumnDefinitions="34,*,66,66,66,74,66">
+                                <TextBlock Grid.Column="0"
+                                           Text="{Binding PeriodRank}"
+                                           FontSize="13"
+                                           Foreground="#9AA3B2"
+                                           VerticalAlignment="Center" />
+                                <Grid Grid.Column="1" ColumnDefinitions="12,*">
+                                    <Border Grid.Column="0"
+                                            Width="10" Height="10"
+                                            CornerRadius="5"
+                                            VerticalAlignment="Center"
+                                            Background="{Binding Group.Brush}" />
+                                    <TextBlock Grid.Column="1"
+                                               Text="{Binding Group.Name}"
+                                               Margin="10,0,0,0"
+                                               FontSize="14"
+                                               VerticalAlignment="Center" />
+                                </Grid>
+                                <TextBlock Grid.Column="2" Text="{Binding CurrentText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="3" Text="{Binding PreviousText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="4" Text="{Binding DeltaChangeText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="5" Text="{Binding CumulativeText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                                <TextBlock Grid.Column="6" Text="{Binding RankChangeText}"
+                                           HorizontalAlignment="Right" VerticalAlignment="Center" />
+                            </Grid>
+                        </DataTemplate>
+                    </ListBox.ItemTemplate>
+                </ListBox>
+
+                <TextBlock Grid.Row="4"
+                           Margin="0,8,0,0"
+                           FontSize="11"
+                           Foreground="#6E7686"
+                           TextWrapping="Wrap"
+                           Text="「本期 / 上期」是这段时间里的净增分；「相比」是本期减去上期，正数表示比上一期多得了分；「累计」是截至本期结束的总分，也是「名次变化」的依据 —— ↑ 表示名次前进。撤销上一步是「删掉最后一条记录」，所以撤销之后这里的数字会跟着一起变。" />
+            </Grid>
+        </TabItem>
+
+        <!-- ==================== Tab 5：预设与设置 ==================== -->
+        <TabItem Header="预设与设置">
+            <ScrollViewer>
+                <StackPanel Margin="12" Spacing="8">
+
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="预设积分项" />
+                    <TextBlock FontSize="12" Foreground="#9AA3B2"
+                               Text="预设项会变成悬浮球面板和「积分操作」页上的快捷按钮。" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBox x:Name="NewPresetLabel" Width="180" Watermark="名称，如 回答正确" />
+                        <NumericUpDown x:Name="NewPresetDelta"
+                                       Width="110"
+                                       Minimum="-99" Maximum="99"
+                                       Increment="1" Value="2"
+                                       FormatString="0" />
+                        <Button Content="添加预设" Click="OnAddPresetClick" />
+                        <Button Content="删除选中预设" Click="OnDeletePresetClick" />
+                    </StackPanel>
+                    <ListBox x:Name="PresetListBox" MaxHeight="150" />
+
+                    <Separator Margin="0,10" />
+
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="悬浮球" />
+                    <TextBlock FontSize="12" Foreground="#9AA3B2"
+                               Text="ClassIsland 本身没有悬浮球功能，这里是插件自己创建的置顶小窗口。" />
+                    <CheckBox x:Name="AutoShowCheck" Content="上课时自动弹出积分球" />
+                    <CheckBox x:Name="AutoHideCheck" Content="下课 / 放学时自动收起" />
+
+                    <CheckBox x:Name="SubjectFilterCheck" Content="只在指定科目上课时弹出（科目在下面勾选）" />
+                    <WrapPanel x:Name="SubjectCheckPanel" Margin="24,2,0,0" />
+                    <TextBlock x:Name="SubjectHintText"
+                               FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap" />
+
+                    <TextBlock FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap"
+                               Text="提示：如果用「应用设置 → 自动化」里的「小组积分」行动来控制积分球，请先取消上面两个勾 —— 否则内置的自动弹出会和自动化互相打架。" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="停靠位置" VerticalAlignment="Center" />
+                        <ComboBox x:Name="CornerCombo" Width="150" />
+                    </StackPanel>
+                    <TextBlock FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap"
+                               Text="提示：也可以直接在桌面上按住积分球拖动来换位置，拖过之后会记住（这时「停靠位置」就不再起作用了）。" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button x:Name="ResetBallPositionButton"
+                                Content="恢复默认位置"
+                                Click="OnResetBallPositionClick" />
+                        <TextBlock x:Name="BallPositionText"
+                                   FontSize="12"
+                                   Foreground="#9AA3B2"
+                                   VerticalAlignment="Center"
+                                   TextWrapping="Wrap" />
+                    </StackPanel>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="加分面板样式" VerticalAlignment="Center" />
+                        <ComboBox x:Name="PanelStyleCombo" Width="260" />
+                    </StackPanel>
+                    <TextBlock FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap"
+                               Text="逐个选择：先在下拉框挑小组，再点预设按钮 —— 适合小组多、要点到具体学生头上的场合。全部展开：每个小组各占一行，行尾直接就是加减分按钮，点一下就给那一组记分，不用先选组。两种样式随时可以在悬浮球面板右上角一键切换，这里的设置只是默认值。" />
+
+                    <Separator Margin="0,10" />
+
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="加分时段" />
+                    <CheckBox x:Name="RestrictScoreCheck" Content="只在上课时允许加分" />
+                    <TextBlock FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap"
+                               Text="ClassIsland 里没配课表、或课表功能没启用时，这一条会自动失效 —— 否则插件就成了点不动的砖头。" />
+                    <TextBlock x:Name="ScoreAccessText"
+                               FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap" />
+
+                    <Separator Margin="0,10" />
+
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="积分榜" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="主界面显示前几名" VerticalAlignment="Center" />
+                        <NumericUpDown x:Name="TopNBox"
+                                       Width="110"
+                                       Minimum="-1" Maximum="50"
+                                       Increment="1"
+                                       FormatString="0" />
+                        <TextBlock Text="（填 -1 表示全部显示）" VerticalAlignment="Center"
+                                   FontSize="12" Foreground="#9AA3B2" />
+                    </StackPanel>
+
+                    <Separator Margin="0,10" />
+
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="历史对比" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <TextBlock Text="一周从周几开始" VerticalAlignment="Center" />
+                        <ComboBox x:Name="WeekStartCombo" Width="150" />
+                    </StackPanel>
+                    <TextBlock FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap"
+                               Text="只影响「历史对比」里按周切分的方式，不会改动任何已记录的数据 —— 改完之后上周的区间会平移，数字跟着变，但总分一分不差。" />
+
+                    <Separator Margin="0,10" />
+
+                    <TextBlock FontSize="14" FontWeight="SemiBold" Text="数据" />
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="导出 CSV" Click="OnExportCsvClick" />
+                        <Button Content="打开数据目录" Click="OnOpenFolderClick" />
+                        <Button Content="立即保存" Click="OnSaveNowClick" />
+                    </StackPanel>
+                    <TextBlock x:Name="DataPathText"
+                               FontSize="11"
+                               Foreground="#6E7686"
+                               TextWrapping="Wrap" />
+                    <TextBlock x:Name="DataStatusText"
+                               FontSize="12"
+                               Foreground="#1D9E75"
+                               TextWrapping="Wrap" />
+
+                </StackPanel>
+            </ScrollViewer>
+        </TabItem>
+    </TabControl>
+</UserControl>

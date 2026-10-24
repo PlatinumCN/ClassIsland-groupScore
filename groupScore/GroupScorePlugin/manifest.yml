@@ -1,0 +1,20 @@
+# nonk8s
+# 插件清单文件（YAML 格式）。
+# 格式说明：https://docs.classisland.tech/zh-cn/latest/dev/plugins/create-project/#插件清单文件
+
+id: groupScore           # 插件唯一 id。安装目录名就是它，发布后不要改
+name: 小组积分
+description: 上课时自动弹出积分球，点击展开即可给小组加减分；主界面可显示实时积分榜。
+entranceAssembly: "GroupScorePlugin.dll"
+# ⚠️ 发布前把 __USER__ / __REPO__ 换成 GitHub 用户名和仓库名
+#（插件市场里「主页」按钮直接跳这里；改完必须重新打包，manifest 是打进 .cipx 的）。
+url: https://github.com/__USER__/__REPO__
+author: PlatinumCN
+version: 1.0.0.0
+# 面向的 ClassIsland 版本：本机实测环境为 2.1.0.1，
+# 插件只会在这个版本及以上的 ClassIsland 上加载。
+apiVersion: 2.1.0.1
+icon: icon.png
+readme: README.md
+supportedOSPlatforms:
+  - Windows

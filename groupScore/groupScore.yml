@@ -1,0 +1,41 @@
+# ============================================================================
+# ClassIsland 插件市场「索引项」
+#
+# 这份文件 = 插件自带的 manifest.yml + 市场需要的几个补充字段（repo* / assetsRoot /
+# artifactName）。它不是给用户看的，也不是打进 .cipx 的 —— 它只做一件事：
+# 提交到 https://github.com/ClassIsland/PluginIndex 的 index/plugins-v2/ 目录下。
+#
+# 提交规矩（官方《发布插件》文档）：
+#   1. 文件名必须是插件 id → groupScore.yml，别改
+#   2. 走 PR，人工审核；通过后应用内插件市场就能搜到
+#   3. 这里的 version 必须和 GitHub Release 的 Tag 完全一致（1.0.0.0）
+#
+# ⚠️ 提交之前把下面两处 __USER__ / __REPO__ 换成真实的 GitHub 用户名与仓库名，
+#    同时 GroupScorePlugin/manifest.yml 里的 url 也要一起换（两边必须一致），
+#    换完要重新打包 —— manifest.yml 是打进 .cipx 的。
+# ============================================================================
+
+id: groupScore
+name: 小组积分
+description: 上课时自动弹出积分球，点击展开即可给小组加减分；主界面可显示实时积分榜。
+entranceAssembly: "GroupScorePlugin.dll"
+
+# 插件主页：市场里点插件卡片上的链接就跳这里
+url: https://github.com/__USER__/__REPO__
+# 索引生成器据此去 GitHub 找你的 Release 和资源
+repoOwner: __USER__
+repoName: __REPO__
+# 插件源码在仓库里的位置，格式 <默认分支>/<相对路径>。
+# 仓库根就是本项目根（插件在 GroupScorePlugin/ 子目录下），默认分支 main，所以是 main/GroupScorePlugin。
+# 市场用它来解析 README 里的相对图片（cover.png）。
+assetsRoot: main/GroupScorePlugin
+# Release 里那个要给用户下载的插件包文件名。不写的话取「第一个以 .cipx 结尾的附件」。
+artifactName: groupScore.cipx
+
+version: 1.0.0.0
+# 最低支持的插件加载器版本。本机实测环境是 ClassIsland 2.1.0.1，
+# 所以写成 2.1.0.1 —— 2.0.x 的用户看不到/装不上这个插件（这是有意的，别随手改小）。
+apiVersion: 2.1.0.1
+author: PlatinumCN
+supportedOSPlatforms:
+  - Windows

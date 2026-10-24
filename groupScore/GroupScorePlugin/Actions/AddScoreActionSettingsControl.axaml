@@ -1,0 +1,61 @@
+<ci:ActionSettingsControlBase
+    xmlns="https://github.com/avaloniaui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:ci="http://classisland.tech/schemas/xaml/core"
+    xmlns:local="clr-namespace:GroupScorePlugin.Actions"
+    x:Class="GroupScorePlugin.Actions.AddScoreActionSettingsControl"
+    x:TypeArguments="local:AddScoreActionSettings">
+
+    <!--
+        根元素写成 ClassIsland 的 ActionSettingsControlBase，并用 x:TypeArguments
+        指明设置类型 —— 这是官方文档给的写法。
+        代码后置类必须**直接**继承 ActionSettingsControlBase<AddScoreActionSettings>，
+        因为框架是从 BaseType 的泛型参数里反推设置类型的。
+
+        这里刻意不给文字设 Foreground：设置界面会跟着 ClassIsland 的主题走，
+        硬写一个灰色在深色主题下可能直接看不见。
+    -->
+    <StackPanel Spacing="6" MinWidth="320" Margin="0,4">
+
+        <TextBlock Text="给小组加分或扣分"
+                   FontWeight="SemiBold" />
+
+        <TextBlock Text="作用对象"
+                   FontSize="12"
+                   Opacity="0.7" />
+        <ComboBox x:Name="TargetCombo" HorizontalAlignment="Stretch">
+            <ComboBox.ItemTemplate>
+                <DataTemplate>
+                    <TextBlock Text="{Binding Label}" />
+                </DataTemplate>
+            </ComboBox.ItemTemplate>
+        </ComboBox>
+
+        <Grid ColumnDefinitions="150,12,*" Margin="0,4,0,0">
+            <StackPanel Grid.Column="0" Spacing="4">
+                <TextBlock Text="分值（正加负扣）"
+                           FontSize="12"
+                           Opacity="0.7" />
+                <NumericUpDown x:Name="DeltaBox"
+                               Minimum="-100"
+                               Maximum="100"
+                               Increment="1"
+                               FormatString="0" />
+            </StackPanel>
+
+            <StackPanel Grid.Column="2" Spacing="4">
+                <TextBlock Text="原因（写进积分记录）"
+                           FontSize="12"
+                           Opacity="0.7" />
+                <TextBox x:Name="ReasonBox" Watermark="如：课堂纪律" />
+            </StackPanel>
+        </Grid>
+
+        <TextBlock x:Name="HintText"
+                   Margin="0,6,0,0"
+                   FontSize="12"
+                   Opacity="0.7"
+                   TextWrapping="Wrap" />
+
+    </StackPanel>
+</ci:ActionSettingsControlBase>

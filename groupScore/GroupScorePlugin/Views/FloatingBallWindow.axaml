@@ -1,0 +1,183 @@
+<Window xmlns="https://github.com/avaloniaui"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        x:Class="GroupScorePlugin.Views.FloatingBallWindow"
+        SizeToContent="WidthAndHeight"
+        WindowStartupLocation="Manual"
+        Background="Transparent">
+
+    <Grid>
+
+        <!-- ================= 收起态：圆球 ================= -->
+        <!-- 单击展开操作面板，按住拖动可以换位置（拖过之后会记住，下次上课还在那儿）。
+             三个指针事件缺一不可：
+               Pressed  记下起点 + 捕获指针
+               Moved    位移超过阈值就搬窗口（每帧都走 BallPlacement.DragTo 钳进屏幕）
+               Released 松开时才把落点写进设置（否则拖一次要写几十次磁盘）
+             位移一律按指针的**屏幕物理坐标**算，不是窗口客户区坐标（原因见 CursorScreen 的注释）；
+             窗口尺寸也要换算成物理像素再跟工作区比。这两条都只在 125% / 150% 缩放、
+             或者拖得比较快的时候才看得出差别，所以别改回去。
+             拖动过程中 Avalonia 通常不会再报 Tapped；万一报了，也由 _dragMoved 标记挡掉。 -->
+        <Border x:Name="BallRoot"
+                Width="64" Height="64"
+                CornerRadius="32"
+                Background="#D85A30"
+                Cursor="SizeAll"
+                PointerPressed="OnBallPointerPressed"
+                PointerMoved="OnBallPointerMoved"
+                PointerReleased="OnBallPointerReleased"
+                Tapped="OnBallTapped"
+                ToolTip.Tip="单击展开积分面板，按住可拖动换位置">
+            <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                <TextBlock Text="积分"
+                           FontSize="15" FontWeight="SemiBold"
+                           Foreground="White"
+                           HorizontalAlignment="Center" />
+                <TextBlock Text="点我"
+                           FontSize="10"
+                           Foreground="#FFD9CC"
+                           HorizontalAlignment="Center" />
+            </StackPanel>
+        </Border>
+
+        <!-- ================= 展开态：操作面板 ================= -->
+        <!-- 面板本身也挂同一套指针事件：光靠球是不行的 —— 展开之后球已经被藏起来
+             （BallRoot.IsVisible = false），那时窗口唯一能按住的地方就是这块面板。
+             少了这三个事件，面板一展开就等于把位置锁死，只剩「收起」能做。
+             触摸到按钮 / 下拉框 / 输入框时不会启动拖动，见 IsInteractiveSource。 -->
+        <Border x:Name="PanelRoot"
+                IsVisible="False"
+                Width="340"
+                CornerRadius="14"
+                Background="#1E222B"
+                BorderBrush="#39404E"
+                BorderThickness="1"
+                PointerPressed="OnPanelPointerPressed"
+                PointerMoved="OnBallPointerMoved"
+                PointerReleased="OnBallPointerReleased">
+            <StackPanel Margin="14" Spacing="10">
+
+                <!-- 标题栏。整条都是拖动把手，所以光标设成「可移动」。 -->
+                <Grid ColumnDefinitions="*,Auto,Auto" Cursor="SizeAll"
+                      ToolTip.Tip="按住面板任意空白处即可拖动整个窗口">
+                    <TextBlock Grid.Column="0"
+                               Text="小组积分"
+                               FontSize="16" FontWeight="SemiBold"
+                               Foreground="#EDEDED"
+                               VerticalAlignment="Center" />
+                    <Button Grid.Column="1"
+                            x:Name="StyleToggleButton"
+                            Content="全部展开"
+                            FontSize="11"
+                            Padding="8,3"
+                            Margin="0,0,6,0"
+                            Click="OnToggleStyleClick"
+                            ToolTip.Tip="切换加分面板样式：逐个选择 ⇄ 全部展开" />
+                    <Button Grid.Column="2"
+                            Content="收起"
+                            FontSize="12"
+                            Padding="10,4"
+                            Click="OnCollapseClick" />
+                </Grid>
+
+                <!-- ========== 样式一：逐个选择 ========== -->
+                <!-- 先在下拉框里挑小组，再点预设按钮。小组多、要指到具体成员时用这个。 -->
+                <StackPanel x:Name="PickerArea" Spacing="10">
+
+                    <!-- 选择小组 -->
+                    <TextBlock Text="选择小组" FontSize="12" Foreground="#9AA3B2" />
+                    <ComboBox x:Name="GroupCombo"
+                              HorizontalAlignment="Stretch" />
+
+                    <!-- 选择成员（可选）：默认「不指名」，只有需要把分算到某个学生头上时才选。
+                         这一项存在的理由：课上最常见的场景就是「张三回答对了」，
+                         只记到小组一级的话，回头没法知道是谁答的。 -->
+                    <TextBlock Text="选择成员（可选）" FontSize="12" Foreground="#9AA3B2" />
+                    <ComboBox x:Name="MemberCombo"
+                              HorizontalAlignment="Stretch"
+                              ToolTip.Tip="不选则只记到小组；选了就把这笔分同时算在这个学生头上（小组总分同样增加）" />
+
+                    <!-- 快捷加减分：按钮在代码里按预设项动态生成 -->
+                    <TextBlock Text="快捷加减分" FontSize="12" Foreground="#9AA3B2" />
+                    <WrapPanel x:Name="PresetPanel" />
+
+                    <!-- 自定义分值 -->
+                    <TextBlock Text="自定义" FontSize="12" Foreground="#9AA3B2" />
+                    <Grid ColumnDefinitions="96,*">
+                        <NumericUpDown x:Name="DeltaBox"
+                                       Grid.Column="0"
+                                       Minimum="-999" Maximum="999"
+                                       Increment="1"
+                                       Value="1"
+                                       FormatString="0" />
+                        <TextBox x:Name="ReasonBox"
+                                 Grid.Column="1"
+                                 Margin="8,0,0,0"
+                                 Watermark="原因（可留空）" />
+                    </Grid>
+
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Button Content="应用" Click="OnApplyCustomClick" />
+                    </StackPanel>
+
+                </StackPanel>
+
+                <!-- ========== 样式二：全部展开 ========== -->
+                <!-- 每个小组一行，行尾直接就是加减分按钮 —— 想给哪组加分就点哪一行的按钮，
+                     不用先在下拉框里挑一次。行由 BuildGridRows() 在代码里生成。 -->
+                <StackPanel x:Name="GridArea" Spacing="8" IsVisible="False">
+                    <TextBlock x:Name="GridHintText"
+                               FontSize="11"
+                               Foreground="#9AA3B2"
+                               TextWrapping="Wrap" />
+                    <StackPanel x:Name="GridScorePanel" Spacing="3" />
+                </StackPanel>
+
+                <!-- ========== 两种样式都有：撤销与状态 ========== -->
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button Content="撤销上一步" Click="OnUndoClick" />
+                </StackPanel>
+
+                <!-- 迷你积分榜（只有逐个选择样式显示：全部展开样式里每行本来就带着分数） -->
+                <StackPanel x:Name="RankArea" Spacing="6">
+                    <TextBlock Text="积分榜" FontSize="12" Foreground="#9AA3B2" />
+                    <ItemsControl x:Name="MiniRankList">
+                        <ItemsControl.ItemTemplate>
+                            <DataTemplate>
+                                <Grid ColumnDefinitions="24,8,*,Auto" Margin="0,2">
+                                    <TextBlock Grid.Column="0"
+                                               Text="{Binding Rank}"
+                                               FontSize="12" Foreground="#9AA3B2" />
+                                    <Border Grid.Column="1"
+                                            Width="6" Height="14"
+                                            CornerRadius="3"
+                                            VerticalAlignment="Center"
+                                            Background="{Binding Brush}" />
+                                    <TextBlock Grid.Column="2"
+                                               Text="{Binding Name}"
+                                               Margin="8,0,0,0"
+                                               FontSize="12" Foreground="#D6DAE2" />
+                                    <TextBlock Grid.Column="3"
+                                               Text="{Binding Total}"
+                                               FontSize="12" FontWeight="SemiBold"
+                                               Foreground="#EDEDED" />
+                                </Grid>
+                            </DataTemplate>
+                        </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                </StackPanel>
+
+                <TextBlock x:Name="StatusText"
+                           FontSize="11"
+                           Foreground="#5DCAA5"
+                           TextWrapping="Wrap"
+                           MinHeight="14" />
+
+                <TextBlock Text="管理小组请到：应用设置 → 插件 → 小组积分"
+                           FontSize="11"
+                           Foreground="#6E7686"
+                           TextWrapping="Wrap" />
+
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

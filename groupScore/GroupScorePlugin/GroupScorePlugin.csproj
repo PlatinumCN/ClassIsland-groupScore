@@ -1,0 +1,88 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+    <PropertyGroup>
+        <TargetFramework>net8.0-windows</TargetFramework>
+        <ImplicitUsings>enable</ImplicitUsings>
+        <Nullable>enable</Nullable>
+        <!--
+          ★ 插件在 MSBuild 眼里是一个「类库」，而类库默认**不把 NuGet 依赖复制到输出目录**
+          （它的假设是「依赖由宿主程序负责」）。但 ClassIsland 插件恰恰相反：
+          插件跑在独立的 AssemblyLoadContext 里，宿主不会去解析插件的三方库，
+          依赖必须自带。不开这个开关，Microsoft.Data.Sqlite.dll 压根不会出现在
+          插件目录里 —— deps.json 里写着有引用，磁盘上却没有文件，
+          结果是 SQLite 后端一路静默回落到 JSON，而且没有任何报错。
+        -->
+        <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
+    </PropertyGroup>
+
+    <PropertyGroup>
+        <ClassIslandPluginSdkVersion>1.7.106.2-dev-v2</ClassIslandPluginSdkVersion>
+    </PropertyGroup>
+
+    <!--
+      调试用：Properties/launchSettings.json 里的启动配置会读取这两个属性，
+      直接按 F5 就能用本机的 ClassIsland 本体加载并调试本插件（-epp 参数）。
+
+      ★ 这两个值是**可覆盖的默认值**：别人 clone 下来不该为了改路径去动这个文件。
+        dotnet build -p:ClassIsland_DebugBinaryDirectory="D:\ClassIsland"
+        或者设同名环境变量都行；不覆盖时才用下面这套本机路径。
+    -->
+    <PropertyGroup>
+        <ClassIsland_DebugBinaryDirectory Condition="'$(ClassIsland_DebugBinaryDirectory)' == ''">C:\Devc++\ClassIsland</ClassIsland_DebugBinaryDirectory>
+        <ClassIsland_DebugBinaryFile Condition="'$(ClassIsland_DebugBinaryFile)' == ''">$(ClassIsland_DebugBinaryDirectory)\ClassIsland.exe</ClassIsland_DebugBinaryFile>
+    </PropertyGroup>
+
+    <ItemGroup>
+        <PackageReference Include="ClassIsland.PluginSdk" Version="$(ClassIslandPluginSdkVersion)">
+            <ExcludeAssets>runtime; native</ExcludeAssets>
+        </PackageReference>
+        <!--
+          持久化后端：SQLite。
+          选它是因为「加一次分」要同时改记录表和小组总分缓存，
+          JSON 方案只能整份重写，一旦写到一半断电就是半个文件；
+          SQLite 能把两张表的改动放进同一个事务，要么都成、要么都不成。
+        -->
+        <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.13" />
+    </ItemGroup>
+
+    <!--
+      ★ SQLite 依赖一个原生 e_sqlite3.dll。
+      NuGet 只会把它放在 runtimes/win-x64/native/ 下，而 ClassIsland 是用
+      自定义 AssemblyLoadContext 加载插件的，未必会去那个子目录里找原生库 ——
+      找不到就是运行时 DllNotFoundException，编译期一点征兆都没有。
+      所以 Build 之后把它平铺到插件根目录：程序集所在目录是原生库最可靠的
+      探测位置，插件装到 data\Plugins\ 下也一样生效。
+      顺带把随包带来的 linux / mac 同名库裁掉（白占几十 MB）。
+      这条路线已实测：把整个 runtimes 目录藏起来，平铺的 dll 照样能打开数据库。
+    -->
+    <Target Name="FlattenSqliteNativeLibrary" AfterTargets="Build"
+            Condition="Exists('$(OutDir)runtimes\win-x64\native\e_sqlite3.dll')">
+        <Copy SourceFiles="$(OutDir)runtimes\win-x64\native\e_sqlite3.dll"
+              DestinationFolder="$(OutDir)" SkipUnchangedFiles="true" />
+        <RemoveDir Directories="$(OutDir)runtimes" />
+    </Target>
+
+    <ItemGroup>
+        <None Update="manifest.yml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="README.md">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <!-- 工程实现文档。README 末尾指向它，所以必须一起进插件目录，否则链接是死的。
+             刻意与 README 分开：插件概览页（ClassIsland 里渲染 README.md）要短，
+             实现细节不该糊在老师脸上。 -->
+        <None Update="DEV.md">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <None Update="icon.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+        <!-- README 顶部那张封面图。它被 README.md 引用，所以要跟 README 一起进插件目录，
+             否则插件市场里渲染出来是个裂图。 -->
+        <None Update="cover.png">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </None>
+    </ItemGroup>
+
+</Project>
